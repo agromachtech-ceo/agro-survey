@@ -41,6 +41,9 @@ var REPLACE = ['', 'Ирэх улиралд', '1–2 жилд', 'Төлөвлө�
 var FINANCE = ['', 'Өөрийн хөрөнгө', 'Банкны зээл', 'Лизинг', 'Төрийн хөтөлбөр', 'Тодорхойгүй'];
 var RENT = ['', 'Түрээсэлдэггүй', 'Техник түрээсэлдэг', 'Ажил гүйцэтгүүлдэг', 'Бусдад түрээслүүлдэг'];
 var WHEN = ['', 'Энэ улиралд', 'Ирэх жил', '2–3 жилд', 'Мэдэхгүй'];
+var ROLES = ['', 'Захирал', 'Эзэмшигч', 'Агрономич', 'Инженер, механик', 'Нягтлан', 'Ажилтан', 'Гэр бүлийн гишүүн', 'Бусад'];
+var MIN_CONTACTS = 2;
+function digits(s) { return String(s || '').replace(/\D/g, ''); }
 
 function $(id) { return document.getElementById(id); }
 function esc(s) { return String(s === null || s === undefined ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
@@ -244,8 +247,15 @@ function startSurvey(custId) {
   var dr = { client_uid: uid(), cust_id: custId || '', cust_name: c ? c.name : '', new_customer: custId ? null : { name: '', ttd: '' }, date: today(),
              aimag: (c && c.aimag) || '', sum: (c && c.sum) || '', lat: (c && c.lat) || '', lng: (c && c.lng) || '', photos: [], fleet: [] };
   // Өмнөх судалгааны утгыг эхлэлд авна (жилээс жилд ихэвчлэн бага өөрчлөгддөг)
-  if (s) ['total_ha', 'tech_mode', 'rent', 'finance', 'decision_maker', 'phone', 'expand_ha'].concat(CROPS.map(function (k) { return k[0]; })).forEach(function (k) { if (s[k] !== undefined && s[k] !== '') dr[k] = s[k]; });
+  if (s) ['total_ha', 'tech_mode', 'rent', 'finance', 'expand_ha'].concat(CROPS.map(function (k) { return k[0]; })).forEach(function (k) { if (s[k] !== undefined && s[k] !== '') dr[k] = s[k]; });
   if (!dr.tech_mode) dr.tech_mode = 'Уламжлалт';
+  // Холбоо барих хүмүүс: өмнөх судалгаанаас авна, хуучин хэлбэрийг (нэг нэр, утас) хөрвүүлнэ
+  var cts = [];
+  if (s && s.contacts) { try { cts = JSON.parse(s.contacts); } catch (e) { cts = []; } }
+  else if (s && (s.decision_maker || s.phone)) cts = [{ name: s.decision_maker || '', role: '', phones: String(s.phone || '').split(/[,;]/).map(function (x) { return x.trim(); }).filter(String), dm: true }];
+  while (cts.length < MIN_CONTACTS) cts.push({ name: '', role: '', phones: [''], dm: false });
+  cts.forEach(function (c) { if (!c.phones || !c.phones.length) c.phones = ['']; });
+  dr.contacts = cts;
   if (custId) dr.fleet = d.fleet.filter(function (m) { return m.cust_id === custId; }).map(function (m) {
     return { id: m.id, mtype: m.mtype, brand: m.brand, model: m.model, norm_id: m.norm_id, product_code: m.product_code, ours: m.ours === true || m.ours === 'TRUE' || m.ours === 'true',
              year_made: m.year_made, spec: m.spec, hours: m.hours, cond: m.cond, breakdown: m.breakdown === true || m.breakdown === 'TRUE' || m.breakdown === 'true', last_ha: '', replace_plan: m.replace_plan || '' };
@@ -273,7 +283,8 @@ VIEWS.survey = function () {
   // Б. Техник
   h += '<div class="sec">Б. Техникийн парк</div><div id="fl">' + dr.fleet.map(machHtml).join('') + '</div><button class="btn w" id="addM">+ Техник нэмэх</button>';
   // В. Ярилцлага
-  h += '<div class="sec">В. Ярилцлага</div><div class="card"><div class="g2"><div><label>Шийдвэр гаргагч</label><input data-f="decision_maker" value="' + esc(dr.decision_maker) + '"></div><div><label>Утас</label><input data-f="phone" inputmode="tel" value="' + esc(dr.phone) + '"></div></div>' +
+  h += '<div class="sec">В. Холбоо барих хүмүүс <span class="small muted">(дор хаяж ' + MIN_CONTACTS + ')</span></div><div id="ct">' + dr.contacts.map(contactHtml).join('') + '</div><button class="btn w" id="addC">+ Хүн нэмэх</button>';
+  h += '<div class="sec">Г. Ярилцлага</div><div class="card">' +
     '<label>Санхүүжилт</label><select data-f="finance">' + opts(FINANCE, dr.finance) + '</select>' +
     '<label>Аль ажил хамгийн хүнд / удаан байна?</label><select data-f="hardest">' + opts([''].concat(L.works), dr.hardest) + '</select>' +
     '<label>Ямар техник сонирхож байна?</label><input data-f="interest" list="prodL" value="' + esc(dr.interest) + '"><datalist id="prodL">' + S.data.products.map(function (p) { return '<option value="' + esc(p.name) + '">'; }).join('') + '</datalist>' +
@@ -285,6 +296,32 @@ VIEWS.survey = function () {
   $('v').innerHTML = h;
   bindSurvey();
 };
+function contactHtml(c, i) {
+  return '<div class="mach" data-ci="' + i + '"><div class="h"><b class="grow">' + (i + 1) + '. ' + esc(c.name || 'Холбоо барих хүн') + '</b>' +
+    (S.draft.contacts.length > MIN_CONTACTS ? '<button class="btn sm d" data-cx="rm">Хасах</button>' : '') + '</div>' +
+    '<div class="g2"><div><label>Овог нэр</label><input data-ck="name" value="' + esc(c.name) + '"></div><div><label>Албан тушаал / хамаарал</label><select data-ck="role">' + opts(ROLES, c.role) + '</select></div></div>' +
+    '<label>Утасны дугаар</label>' + c.phones.map(function (p, j) {
+      return '<div class="row" style="margin-bottom:6px"><input class="grow" type="tel" inputmode="tel" data-cp="' + j + '" value="' + esc(p) + '" placeholder="99112233">' +
+        (c.phones.length > 1 ? '<button class="btn sm" data-cpx="' + j + '">✕</button>' : '') + '</div>';
+    }).join('') + '<button class="btn sm" data-cx="ph">+ Утас нэмэх</button>' +
+    '<label class="chk"><input type="checkbox" data-ck="dm"' + (c.dm ? ' checked' : '') + '> Худалдан авалтын шийдвэр гаргагч</label></div>';
+}
+function redrawContacts() { $('ct').innerHTML = S.draft.contacts.map(contactHtml).join(''); bindContacts(); draftSave(); }
+function bindContacts() {
+  Array.prototype.forEach.call(document.querySelectorAll('[data-ci]'), function (box) {
+    var i = Number(box.getAttribute('data-ci')), c = S.draft.contacts[i];
+    Array.prototype.forEach.call(box.querySelectorAll('[data-ck]'), function (el) {
+      el.addEventListener('change', function () { var k = el.getAttribute('data-ck'); c[k] = el.type === 'checkbox' ? el.checked : el.value; if (k === 'name') box.querySelector('.h b').textContent = (i + 1) + '. ' + (c.name || 'Холбоо барих хүн'); draftSave(); });
+    });
+    Array.prototype.forEach.call(box.querySelectorAll('[data-cp]'), function (el) {
+      el.addEventListener('change', function () { c.phones[Number(el.getAttribute('data-cp'))] = el.value.trim(); draftSave(); });
+    });
+    Array.prototype.forEach.call(box.querySelectorAll('[data-cpx]'), function (b) { b.onclick = function () { c.phones.splice(Number(b.getAttribute('data-cpx')), 1); redrawContacts(); }; });
+    Array.prototype.forEach.call(box.querySelectorAll('[data-cx]'), function (b) {
+      b.onclick = function () { if (b.getAttribute('data-cx') === 'ph') c.phones.push(''); else S.draft.contacts.splice(i, 1); redrawContacts(); };
+    });
+  });
+}
 function machHtml(m, i) {
   var L = S.data.lists;
   var norms = S.data.norms.filter(function (n) { return n.mtype === m.mtype || (L.mtypeWork[m.mtype] && n.work === L.mtypeWork[m.mtype]); });
@@ -314,6 +351,8 @@ function bindSurvey() {
     el.addEventListener('change', function () { dr.new_customer[el.getAttribute('data-n') === 'nc_name' ? 'name' : 'ttd'] = el.value; draftSave(); });
   });
   bindFleet();
+  bindContacts();
+  $('addC').onclick = function () { S.draft.contacts.push({ name: '', role: '', phones: [''], dm: false }); redrawContacts(); };
   $('addM').onclick = function () { dr.fleet.push({ mtype: '', cond: '', ours: false, breakdown: false }); redrawFleet(); };
   $('gps').onclick = function () {
     if (!navigator.geolocation) return toast('GPS алга', true);
@@ -388,10 +427,18 @@ function saveSurvey() {
   if (!hasArea && !dr.fleet.length) return toast('Талбай эсвэл техникийн мэдээлэл оруулна уу', true);
   var bad = dr.fleet.filter(function (m) { return !m.removed && !m.mtype; });
   if (bad.length) return toast('Техникийн төрлийг сонгоно уу', true);
+  var cts = (dr.contacts || []).map(function (c) { return { name: (c.name || '').trim(), role: c.role || '', dm: !!c.dm, phones: c.phones.map(function (p) { return String(p || '').trim(); }).filter(function (p) { return digits(p).length > 0; }) }; })
+    .filter(function (c) { return c.name || c.phones.length; });
+  var badPh = cts.filter(function (c) { return c.phones.some(function (p) { return digits(p).length < 6; }); })[0];
+  if (badPh) return toast((badPh.name || 'Холбоо барих хүн') + ': утасны дугаар буруу', true);
+  var full = cts.filter(function (c) { return c.name && c.phones.length; });
+  if (full.length < MIN_CONTACTS) return toast('Дор хаяж ' + MIN_CONTACTS + ' хүний нэр, утасны дугаар оруулна уу', true);
+  if (cts.length > full.length) return toast('Холбоо барих хүн бүрт нэр, утас хоёулаа хэрэгтэй', true);
   var it = {};
   for (var k in dr) if (k.charAt(0) !== '_') it[k] = dr[k];
   ['total_ha', 'expand_ha'].concat(CROPS.map(function (c) { return c[0]; })).forEach(function (k) { if (it[k] !== undefined && it[k] !== '') it[k] = num(it[k]); });
   it.fleet = dr.fleet.map(function (m) { var o = {}; for (var k in m) o[k] = m[k]; ['year_made', 'last_ha', 'cond', 'hours'].forEach(function (x) { if (o[x] !== undefined && o[x] !== '') o[x] = num(o[x]); }); return o; });
+  it.contacts = cts;
   it.state = 'pending'; it.saved_at = new Date().toISOString();
   Q.put(it).then(function () {
     // Офлайн үед ч харагдахуйц орон нутгийн өгөгдлийг шинэчилнэ
@@ -459,7 +506,12 @@ function boot() {
   window.addEventListener('offline', netBadge);
   $('back').onclick = back;
   Array.prototype.forEach.call(document.querySelectorAll('.tabbar a'), function (a) { a.onclick = function () { tab(a.getAttribute('data-t')); }; });
-  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function () {});
+  if ('serviceWorker' in navigator) {
+    // Шинэ хувилбар суусан бол нэг удаа дахин ачаална (дуусаагүй судалгаа хадгалагдсан тул алдагдахгүй)
+    var hadCtl = !!navigator.serviceWorker.controller, reloaded = false;
+    navigator.serviceWorker.addEventListener('controllerchange', function () { if (hadCtl && !reloaded) { reloaded = true; location.reload(); } });
+    navigator.serviceWorker.register('sw.js').then(function (r) { r.update(); }).catch(function () {});
+  }
   Promise.all([kv.get('api'), kv.get('token'), kv.get('me'), kv.get('data'), kv.get('draft')]).then(function (r) {
     S.api = r[0] || window.API_URL || ''; S.token = r[1] || ''; S.me = r[2] || null; S.data = r[3] || null;
     if (!S.api) return show('setup');

@@ -1,9 +1,9 @@
 /* Офлайн ажиллагаа: аппын файлуудыг кэшлэнэ. Шинэчлэхдээ VERSION-ийг өөрчилнө. */
-var VERSION = 'amt-survey-v1';
+var VERSION = 'amt-survey-v2';
 var FILES = ['./', 'index.html', 'app.css', 'app.js', 'geo.js', 'config.js', 'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', function (e) {
-  e.waitUntil(caches.open(VERSION).then(function (c) { return c.addAll(FILES); }).then(function () { return self.skipWaiting(); }));
+  e.waitUntil(caches.open(VERSION).then(function (c) { return c.addAll(FILES.map(function (f) { return new Request(f, { cache: 'reload' }); })); }).then(function () { return self.skipWaiting(); }));
 });
 self.addEventListener('activate', function (e) {
   e.waitUntil(caches.keys().then(function (keys) {
