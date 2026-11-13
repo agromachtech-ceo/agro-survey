@@ -242,6 +242,18 @@ VIEWS.pick = function () {
 };
 
 /* ---------------- Судалгаа ---------------- */
+/** Хуучин хувилбарт хадгалсан дуусаагүй судалгааг шинэ бүтэцтэй нийцүүлнэ */
+function fixDraft(dr) {
+  dr.fleet = Array.isArray(dr.fleet) ? dr.fleet : [];
+  dr.photos = Array.isArray(dr.photos) ? dr.photos : [];
+  if (!dr.cust_id && !dr.new_customer) dr.new_customer = { name: '', ttd: '' };
+  if (!Array.isArray(dr.contacts)) {
+    dr.contacts = (dr.decision_maker || dr.phone) ? [{ name: dr.decision_maker || '', role: '', phones: String(dr.phone || '').split(/[,;]/).map(function (x) { return x.trim(); }).filter(String), dm: true }] : [];
+  }
+  while (dr.contacts.length < MIN_CONTACTS) dr.contacts.push({ name: '', role: '', phones: [''], dm: false });
+  dr.contacts.forEach(function (c) { if (!Array.isArray(c.phones) || !c.phones.length) c.phones = ['']; });
+  return dr;
+}
 function startSurvey(custId) {
   var d = S.data, c = custId ? d.customers.filter(function (x) { return x.id === custId; })[0] : null, s = custId ? d.lastSurvey[custId] : null;
   var dr = { client_uid: uid(), cust_id: custId || '', cust_name: c ? c.name : '', new_customer: custId ? null : { name: '', ttd: '' }, date: today(),
@@ -517,8 +529,12 @@ function boot() {
     if (!S.api) return show('setup');
     if (!S.token || !S.me) return show('login');
     qBadge();
-    if (r[4] && S.data) { S.draft = r[4]; S.stack = [['home']]; show('survey'); toast('Дуусаагүй судалгааг сэргээлээ'); }
-    else tab('home');
+    var restored = false;
+    if (r[4] && S.data) {
+      try { S.draft = fixDraft(r[4]); S.stack = [['home']]; show('survey'); toast('Дуусаагүй судалгааг сэргээлээ'); restored = true; }
+      catch (e) { S.draft = null; kv.del('draft'); S.stack = []; toast('Хуучин хувилбарын дуусаагүй судалгааг нээж чадсангүй, устгалаа', true); }
+    }
+    if (!restored) tab('home');
     sync();
   }).catch(function (e) { $('v').innerHTML = '<div class="card err">Утасны санах ойг нээж чадсангүй: ' + esc(e.message) + '</div>'; });
 }

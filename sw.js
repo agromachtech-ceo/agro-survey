@@ -1,5 +1,5 @@
 /* Офлайн ажиллагаа: аппын файлуудыг кэшлэнэ. Шинэчлэхдээ VERSION-ийг өөрчилнө. */
-var VERSION = 'amt-survey-v3';
+var VERSION = 'amt-survey-v4';
 var FILES = ['./', 'index.html', 'app.css', 'app.js', 'geo.js', 'config.js', 'manifest.webmanifest', 'icon.png', 'logo.png', 'logo-white.png', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', function (e) {
