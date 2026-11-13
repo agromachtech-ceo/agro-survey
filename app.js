@@ -92,7 +92,7 @@ function title(t) { $('ttl').textContent = t; }
 /* ---------------- Тохиргоо, нэвтрэх ---------------- */
 VIEWS.setup = function () {
   title('Тохиргоо');
-  $('v').innerHTML = '<div class="card login"><div class="brand">АМТ</div><h3>Серверийн холбоос</h3><p class="small muted">Оффисын програмын «Deploy → Web app» холбоос (…/exec). Нэг удаа оруулна.</p>' +
+  $('v').innerHTML = '<div class="card login"><img class="brand" src="logo.png" alt="Агромаштех"><h3>Серверийн холбоос</h3><p class="small muted">Оффисын програмын «Deploy → Web app» холбоос (…/exec). Нэг удаа оруулна.</p>' +
     '<label>Холбоос</label><input id="apiU" placeholder="https://script.google.com/macros/s/…/exec" value="' + esc(S.api) + '"><button class="btn p w" id="apiS">Хадгалах</button><div class="err" id="err"></div></div>';
   $('apiS').onclick = function () {
     var u = $('apiU').value.trim();
@@ -102,7 +102,7 @@ VIEWS.setup = function () {
 };
 VIEWS.login = function () {
   title('Нэвтрэх');
-  $('v').innerHTML = '<div class="card login"><div class="brand">АМТ</div><h3>Харилцагчийн судалгаа</h3><p class="small muted">Нэг удаа нэвтэрнэ. Дараа нь офлайн ажиллана.</p>' +
+  $('v').innerHTML = '<div class="card login"><img class="brand" src="logo.png" alt="Агромаштех"><h3>Харилцагчийн судалгаа</h3><p class="small muted">Нэг удаа нэвтэрнэ. Дараа нь офлайн ажиллана.</p>' +
     '<label>Ажилтан</label><select id="lSt"><option>Ачаалж байна…</option></select><label>PIN</label><input id="lPin" type="password" inputmode="numeric" maxlength="8">' +
     '<button class="btn p w" id="lGo">Нэвтрэх</button><div class="err" id="err"></div><p class="small muted" style="margin-top:16px"><a href="#" id="lSet">Серверийн холбоос солих</a></p></div>';
   $('lSet').onclick = function (e) { e.preventDefault(); show('setup'); };
@@ -275,7 +275,7 @@ VIEWS.survey = function () {
   // А. Аж ахуй
   h += '<div class="sec">А. Аж ахуй</div><div class="card"><div class="g2"><div><label>Аймаг</label><select data-f="aimag"><option value="">—</option>' + opts(MN_GEO.aimags, dr.aimag) + '</select></div>' +
     '<div><label>Сум</label><input data-f="sum" list="sumL" value="' + esc(dr.sum) + '"><datalist id="sumL">' + sumOptions(dr.aimag) + '</datalist></div></div>' +
-    '<button class="btn sm" id="gps" style="margin-top:10px">📍 Байршил авах</button> <span class="small muted" id="gpsT">' + (dr.lat ? Number(dr.lat).toFixed(4) + ', ' + Number(dr.lng).toFixed(4) : 'GPS-гүй') + '</span>' +
+    '<button class="btn sm" id="gps" style="margin-top:10px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg> Байршил авах</button> <span class="small muted" id="gpsT">' + (dr.lat ? Number(dr.lat).toFixed(4) + ', ' + Number(dr.lng).toFixed(4) : 'GPS-гүй') + '</span>' +
     '<div class="g2">' + CROPS.map(function (k) { return '<div><label>' + k[1] + ', га</label><input data-f="' + k[0] + '" inputmode="decimal" value="' + esc(dr[k[0]]) + '"></div>'; }).join('') + '</div>' +
     '<div class="g2"><div><label>Нийт талбай, га</label><input data-f="total_ha" inputmode="decimal" value="' + esc(dr.total_ha) + '" placeholder="авто"></div><div><label>Ирэх жил тэлэх, га</label><input data-f="expand_ha" inputmode="decimal" value="' + esc(dr.expand_ha) + '"></div></div>' +
     '<label>Технологи</label><select data-f="tech_mode">' + opts(L.techModes, dr.tech_mode) + '</select>' +
@@ -291,7 +291,7 @@ VIEWS.survey = function () {
     '<label>Хэзээ авах вэ?</label><select data-f="interest_when">' + opts(WHEN, dr.interest_when) + '</select>' +
     '<label>Тэмдэглэл</label><textarea data-f="note" rows="3">' + esc(dr.note) + '</textarea>' +
     '<label>Зураг (талбай, техник)</label><div class="photos" id="ph">' + dr.photos.map(function (p, i) { return '<img src="data:image/jpeg;base64,' + p.b64 + '" data-i="' + i + '">'; }).join('') + '</div>' +
-    '<input type="file" accept="image/*" capture="environment" id="phIn" class="hidden"><button class="btn sm" id="phB" style="margin-top:8px">📷 Зураг нэмэх</button></div>';
+    '<input type="file" accept="image/*" capture="environment" id="phIn" class="hidden"><button class="btn sm" id="phB" style="margin-top:8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg> Зураг нэмэх</button></div>';
   h += '<div class="sticky-save"><button class="btn p w" id="svSave">Хадгалах</button><button class="btn d w" id="svDrop">Цуцлах</button></div>';
   $('v').innerHTML = h;
   bindSurvey();
@@ -302,7 +302,7 @@ function contactHtml(c, i) {
     '<div class="g2"><div><label>Овог нэр</label><input data-ck="name" value="' + esc(c.name) + '"></div><div><label>Албан тушаал / хамаарал</label><select data-ck="role">' + opts(ROLES, c.role) + '</select></div></div>' +
     '<label>Утасны дугаар</label>' + c.phones.map(function (p, j) {
       return '<div class="row" style="margin-bottom:6px"><input class="grow" type="tel" inputmode="tel" data-cp="' + j + '" value="' + esc(p) + '" placeholder="99112233">' +
-        (c.phones.length > 1 ? '<button class="btn sm" data-cpx="' + j + '">✕</button>' : '') + '</div>';
+        (c.phones.length > 1 ? '<button class="btn sm" data-cpx="' + j + '" aria-label="Утас хасах"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>' : '') + '</div>';
     }).join('') + '<button class="btn sm" data-cx="ph">+ Утас нэмэх</button>' +
     '<label class="chk"><input type="checkbox" data-ck="dm"' + (c.dm ? ' checked' : '') + '> Худалдан авалтын шийдвэр гаргагч</label></div>';
 }
@@ -461,7 +461,7 @@ VIEWS.queue = function () {
     var h = '<div class="card"><h3>Илгээгдээгүй (' + items.length + ')</h3>' + (items.length ? items.map(function (it) {
       return '<div class="li"><div class="grow"><div class="t">' + esc(it.cust_name || (it.new_customer && it.new_customer.name) || '') + '</div><div class="s">' + esc(it.date) + ' · ' + (it.fleet || []).length + ' техник · ' + (it.photos || []).length + ' зураг</div>' +
         (it.error ? '<div class="err">' + esc(it.error) + '</div>' : '') + '</div>' + (it.state === 'error' ? '<span class="tag bad">Алдаа</span>' : '<span class="tag warn">Хүлээгдэж байна</span>') +
-        '<button class="btn sm d" data-del="' + esc(it.client_uid) + '">✕</button></div>';
+        '<button class="btn sm d" data-del="' + esc(it.client_uid) + '" aria-label="Устгах"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>';
     }).join('') : '<div class="muted">Бүгд илгээгдсэн.</div>') + '</div>';
     if (items.length) h += '<button class="btn p w" id="qGo">Одоо илгээх</button>';
     $('v').innerHTML = h;
@@ -484,7 +484,7 @@ VIEWS.map = function () {
   if (S.here) { var q = MN_GEO.toXY(S.here[0], S.here[1]); svg += '<circle cx="' + q[0].toFixed(1) + '" cy="' + q[1].toFixed(1) + '" r="5" fill="#D64545" stroke="#fff" stroke-width="1.5"></circle>'; }
   svg += '</svg>';
   $('v').innerHTML = '<div class="seg" style="margin-bottom:8px"><a data-c="mine" class="' + (S.custTab === 'mine' ? 'on' : '') + '">Миний</a><a data-c="all" class="' + (S.custTab === 'all' ? 'on' : '') + '">Бүгд</a></div>' +
-    '<div class="card mapw">' + svg + '<div class="row" style="margin-top:8px"><span class="small muted grow">Аймаг дээр дарж харилцагчийг харна. Шар цэг = GPS-тэй харилцагч.</span><button class="btn sm" id="here">📍 Би хаана</button></div></div>' +
+    '<div class="card mapw">' + svg + '<div class="row" style="margin-top:8px"><span class="small muted grow">Аймаг дээр дарж харилцагчийг харна. Шар цэг = GPS-тэй харилцагч.</span><button class="btn sm" id="here"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg> Би хаана</button></div></div>' +
     '<div class="card" id="cl">' + (S.aimag ? '<h3>' + esc(S.aimag) + '</h3>' + custListHtml(custRows()) : '<div class="muted small">Аймаг сонгоогүй.</div>') + '</div>';
   Array.prototype.forEach.call(document.querySelectorAll('.seg a[data-c]'), function (a) { a.onclick = function () { S.custTab = a.getAttribute('data-c'); VIEWS.map(); }; });
   Array.prototype.forEach.call(document.querySelectorAll('path[data-a]'), function (p) { p.onclick = function () { S.aimag = S.aimag === p.getAttribute('data-a') ? '' : p.getAttribute('data-a'); S.q = ''; VIEWS.map(); }; });
